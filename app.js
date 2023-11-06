@@ -70,16 +70,27 @@ function validateGuess(guess) {
 }
 
 // ¿En que punto del código hay que invocar a esta función?
-async function sendScoreToServer() {
+async function sendScoreToServer(elapsedTime, attempts) {
   // TODO: Establecer adecuadamente el valor de las propiedades elapsed_time y attempts
   const score = {
-    machine: "",
-    elapsed_time: 0,
-    attempts: 0,
+    machine: "MC",
+    elapsed_time: elapsedTime,
+    attempts: attempts,
   };
   // TODO: CODE ME!! Haz el POST con la función fetch.
   console.log("Enviando los datos al servidor de King.com"); //POST
+
   // Enviamos los datos al endpoint
+  let response = await fetch('https://guessing-name-score-api.onrender.com/add-score', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8'
+    },
+    body: JSON.stringify(score)
+  });
+
+  let result = await response.json();
+  console.log(result.message);
 }
 
 function checkGuess(guess) {
@@ -88,8 +99,10 @@ function checkGuess(guess) {
     displayMessage(
       `You guessed correctly! You can check all the scores at <a href="https://03i74i.csb.app/">https://03i74i.csb.app/</a> (provided that the developer did the work!!)`
     );
+    //Capturamos los segundos que hay en ese
+    const elapsedTime = +document.querySelector("#remaining-time").textContent;
 
-    sendScoreToServer();
+    sendScoreToServer(elapsedTime, numGuesses);
     endGame();
   } else if (guess < randomNumber) {
     displayMessage(`Too low! Try again!`);
@@ -142,8 +155,27 @@ function newGame() {
     timer = setInterval(updateRemainingTime, 1000);
   });
 }
+
+
+//Crear tabla resultados 
+async function createTable(){
+  const scoreTable = document.querySelector("#scoreTable tbody");
+
+  const response = await fetch("https://guessing-name-score-api.onrender.com/get-scores");
+  const result = await response.json();
+  result.forEach(element => {
+    const row = scoreTable.insertRow();
+    const cell1 = row.insertCell(0);
+    const cell2 = row.insertCell(1);
+    const cell3 = row.insertCell(2);
+
+    cell1.textContent = element.machine;
+    cell2.textContent = element.elapsed_time;
+    cell3.textContent = element.attempts;
+  });
+}
 //Allow to restart game with restart button
 //Change DIV to a form so it can accept the enter key
-
+createTable();
 //NOTES:
 //NaN != NaN
